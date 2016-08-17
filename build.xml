@@ -9,7 +9,9 @@
 	<property name="MessageRuntimeImpl" value="edu.mayo.informatics.cts.CTSMAPI.refImpl.RuntimeOperationsImpl"/>
 	<property name="VocabBrowserImpl" value="edu.mayo.informatics.cts.CTSVAPI.sql.refImpl.BrowserOperationsImpl"/>
 	<property name="VocabRuntimeImpl" value="edu.mayo.informatics.cts.CTSVAPI.sql.refImpl.RuntimeOperationsImpl"/>
+	<property name="HWMessageRuntimeImpl" value="com.apelon.headwater.HWAPI.refImpl.HWRuntimeOperationsImpl"/>
 
+	
 	<!-- IDL compiler related properties -->
 	<property name="idl.compiler" value="com.sun.tools.corba.se.idl.toJavaPortable.Compile" />
 	<path id="java.tools" path="${java.home}/../lib/tools.jar" />
@@ -57,6 +59,8 @@
 	<property name="CTSMAPI.urn" value="urn://hl7.org/CTSMAPI" />
 	<property name="CTSVAPI.package" value="org.hl7.CTSVAPI" />
 	<property name="CTSVAPI.urn" value="urn://hl7.org/CTSVAPI" />
+	<property name="HWAPI.package" value="com.apelon.headwater.HWAPI"/>
+	<property name="HWAPI.urn" value="urn://headwater.apelon.com/HWAPI"/>
 
 	<!--Sets up all of the classpaths, etc-->
 	<target name="init">
@@ -126,6 +130,7 @@
 			<arg line="-pkgPrefix types org.hl7.cts" />
 			<arg line="-pkgPrefix CTSMAPI org.hl7" />
 			<arg line="-pkgPrefix CTSVAPI org.hl7" />
+			<arg line="-pkgPrefix HWAPI com.apelon.headwater" />
 			<arg line="-i ${idl.src.dir}" />
 			<arg line="${idl.src.dir}/${compileTarget}.idl" />
 		</java>
@@ -208,6 +213,7 @@
 			<arg line="-p${v3dt.package}=${v3dt.urn}" />
 			<arg line="-p${CTSMAPI.package}=${CTSMAPI.urn}" />
 			<arg line="-p${CTSVAPI.package}=${CTSVAPI.urn}" />
+			<arg line="-p${HWAPI.package}=${HWAPI.urn}" />
 			<arg line="-y WRAPPED" />
 			<arg line="${wsdlClass}" />
 		</java>
@@ -232,6 +238,7 @@
 			<arg line="-N${v3dt.urn}=${v3dt.package}" />
 			<arg line="-N${CTSMAPI.urn}=${CTSMAPI.package}" />
 			<arg line="-N${CTSVAPI.urn}=${CTSVAPI.package}" />
+			<arg line="-N${HWAPI.urn}=${HWAPI.package}" />
 			<arg line="-s" />
 			<arg line="file:${wsdl.target.dir}/${wsdlSource}.wsdl" />
 		</java>
@@ -250,6 +257,7 @@
 			<or>
 				<equals arg1="${ant.java.version}" arg2="1.4" />
 				<equals arg1="${ant.java.version}" arg2="1.5" />
+				<equals arg1="${ant.java.version}" arg2="1.6" />
 			</or>
 		</condition>
 
@@ -271,6 +279,10 @@
 		<antcall target="compileIdlJavaOutput">
 			<param name="packageDir" value="org/hl7" />
 			<param name="compileTarget" value="CTSMAPI" />
+		</antcall>
+		<antcall target="compileIdlJavaOutput">
+			<param name="packageDir" value="com/apelon/headwater" />
+			<param name="compileTarget" value="HWAPI" />
 		</antcall>
 
 		<jar jarfile="${idlJava.jar}" basedir="${idl.compile.target.dir}" includes="**/*.class" />
@@ -318,6 +330,14 @@
 			<param name="wsdlUrn" value="${CTSMAPI.urn}" />
 			<param name="wsdlImplClass" value="${MessageBrowserImpl}" />
 		</antcall>
+		<antcall target="genWsdlTarget">
+			<reference refid="axisJars" />
+			<reference refid="xml.parser" />
+			<param name="wsdlTarget" value="HWMessageRuntime" />
+			<param name="wsdlClass" value="com.apelon.headwater.HWAPI.HWRuntimeOperations" />
+			<param name="wsdlUrn" value="${HWAPI.urn}" />
+			<param name="wsdlImplClass" value="${HWMessageRuntimeImpl}" />
+		</antcall>
 		<!-- Package up the wsdl files for distribution -->
 		<zip destfile="${deploy.dir}/wsdl.zip" basedir="${wsdl.target.dir}" includes="*.wsdl" />
 	</target>
@@ -358,7 +378,14 @@
 			<reference refid="xml.parser" />
 			<param name="wsdlSource" value="MessageBrowser" />
 			<param name="packageDir" value="org/hl7/CTSMAPI" />
-			<param name="wsdlImplClass" value="MessageBrowserImpl" />
+			<param name="wsdlImplClass" value="${MessageBrowserImpl}" />
+		</antcall>
+		<antcall target="genWddl">
+			<reference refid="axisJars" />
+			<reference refid="xml.parser" />
+			<param name="wsdlSource" value="HWMessageRuntime" />
+			<param name="packageDir" value="com/apelon/headwater/HWAPI" />
+			<param name="wsdlImplClass" value="${HWMessageRuntimeImpl}" />
 		</antcall>
 		<!-- Package up the deploy / undeploy wsdd files for distribution -->
 		<zip destfile="${deploy.dir}/deploy_undeploy_wsdd.zip" basedir="${wsdd.target.dir}" />

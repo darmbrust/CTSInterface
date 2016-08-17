@@ -1,0 +1,109 @@
+/*
+ *  Source file: Headwater.idl
+ */
+#ifndef   __HWAPI_DEFINED
+#define   __HWAPI_DEFINED
+
+
+#include "types.idl"
+#include "CTSMAPI.idl"
+
+
+/* Headwater CTS Extension API
+ */
+ 
+module HWAPI {
+/***********************************************
+ * Suffix convention:
+ *	Xxx		- Type suffix
+ *	_xxx		- attribute suffix
+ *
+  Suffixes
+ *	Id		- unique entity identifier
+ *	Name		- unique name
+ *	Code		- concept code
+ */
+
+/* HL7SpecBlock:TranslatedCode */
+/* The error type returned in a TranslationError instance.  Corresponds to:
+      UnknownCodeSystem   - the code system in the source code was unrecognized
+      UnableToTranslate   - the translation failed for the reason specified
+
+   in CTSMAPI
+*/
+	enum TranslationErrorType {
+		ET_UnknownCodeSystem,
+		ET_UnableToTranslate
+	};
+	
+/* TranslationError - A translation error for an individual concept code.
+ *
+ *   errorType   - the particular error that was encountered
+ *   errorText   - the textual message of the error
+ *   errorDetail - the stringified form of the error detail
+ */
+	struct TranslationError {
+		TranslationErrorType	errorType;
+		types::ST				errorText;
+		types::ST				errorDetail;
+	};
+
+/* ApplicationContextCodeList - a list of application contexts
+ */
+	typedef sequence<CTSMAPI::ApplicationContextCode> ApplicationContextCodeList;
+	
+/* CodeToTranslate - a code to be translated.
+ *    vocabularyDomain_name - vocabulary domain for for the code
+ *    sourceCode            - code to be translated
+ */
+	struct CodeToTranslate {
+		CTSMAPI::VocabularyDomainName	vocabularyDomain_name;
+		types::CD				sourceCode;
+	};
+	typedef sequence<CodeToTranslate> CodeToTranslateList;
+	
+/* TranslatedCode - a translated sourceCode.  Contains the full CD form, including
+ *                  the source code and the translation (if no errors).
+ *    success     - true means translation was successful, false means error occurred
+ *    translatedSourceCode - sourceCode with translation if success = true, else sourceCode
+ *    error       - reason translation failed if success = false.  Empty if success = true
+ */
+	struct TranslatedCode {
+		types::BL				success;
+		types::CD				translatedSourceCode;
+		TranslationError		error;
+	};
+	typedef sequence<TranslatedCode> TranslatedCodeList;
+/* HL7SpecBlockEnd */
+		
+/**********************************
+ * Browser API                    *
+ **********************************/
+ /* HL7SpecBlock:browser */
+ 
+        interface HWRuntime : CTSMAPI::Runtime {
+/* HL7SpecBlock:translateCodesInBatch */
+
+/* Translate a list of one or more codes in batch.
+ *
+ *     toApplicationContext_codes - context(s) into which sourceCodes are to be translated
+ *     sourceCodes                - list of source codes to translate
+ *
+ *     returns                    - list of translated codes and/or errors
+ *
+ *     Exceptions:
+ *		UnknownApplicationContextCode - one or more application context codes were not recognized
+ */
+         TranslatedCodeList translateCodesInBatch(
+                in ApplicationContextCodeList  	toApplicationContext_codes,
+                in CodeToTranslateList			sourceCodes
+                )
+                raises (CTSMAPI::UnknownApplicationContextCode,
+                        CTSMAPI::UnexpectedError);
+
+/* HL7SpecBlockEnd */
+   };
+
+};
+
+#endif
